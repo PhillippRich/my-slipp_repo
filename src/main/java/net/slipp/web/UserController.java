@@ -1,5 +1,7 @@
 package net.slipp.web;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,17 +21,38 @@ public class UserController {
 	@Autowired
 	private UserRepository userRepository;
 
+	@GetMapping("/loginForm")
+	public String loginForm() {
+		return "/user/loginForm";
+	}
+
+	@PostMapping("/login")
+	public String logIn(String userId, String password, HttpSession httpSession) {
+		User user = userRepository.findByUserId(userId);
+		if (user == null) {
+			return "redirect:/users/loginForm";
+		}
+
+		if (!user.getPassword().equals(password)) {
+			return "redirect:/users/loginForm";
+		}
+
+		httpSession.setAttribute("user", user);
+
+		return "redirect:/";
+	}
+
 	@GetMapping("/form")
 	public String signUp() {
 		return "/user/form";
 	}
-	
+
 	@GetMapping("/{id}/updateForm")
 	public String updateform(@PathVariable Long id, Model model) {
 		model.addAttribute(userRepository.findOne(id));
 		return "/user/updateForm";
 	}
-	
+
 	@PutMapping("/{id}")
 	public String updateUser(@PathVariable Long id, User newUserInfo) {
 		User user = userRepository.findOne(id);
@@ -39,7 +62,7 @@ public class UserController {
 	}
 
 	@PostMapping("")
-	public String createUser(User user) {	
+	public String createUser(User user) {
 		userRepository.save(user);
 		return "redirect:/users";
 	}
@@ -50,11 +73,6 @@ public class UserController {
 		return "/user/list";
 	}
 
-	@GetMapping("/login")
-	public String logIn() {
-		return "/user/login";
-	}
-	
 	// Old
 	// @GetMapping("/form")
 	// public String signUp() {
