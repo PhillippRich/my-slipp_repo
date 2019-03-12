@@ -42,6 +42,12 @@ public class UserController {
 		return "redirect:/";
 	}
 
+	@GetMapping("/logout")
+	public String logOut(HttpSession httpSession) {
+		httpSession.removeAttribute("user");
+		return "redirect:/";
+	}
+
 	@GetMapping("/form")
 	public String signUp() {
 		return "/user/form";
