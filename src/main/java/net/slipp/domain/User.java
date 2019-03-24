@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.springframework.util.StringUtils;
+
 @Entity
 public class User {
 
@@ -26,8 +28,13 @@ public class User {
 		this.email = newUserInfo.getEmail();
 	}
 
-	public Long getId() {
-		return id;
+	public boolean matchId(Long id) {
+
+		if (id == null) {
+			return false;
+		}
+
+		return id.equals(this.id);
 	}
 
 	public void setId(Long id) {
@@ -52,6 +59,15 @@ public class User {
 
 	public String getPassword() {
 		return password;
+	}
+
+	public boolean matchPassword(String password) {
+
+		if (!StringUtils.isEmpty(password)) {
+			return false;
+		}
+
+		return password.equals(this.password);
 	}
 
 	public void setPassword(String password) {

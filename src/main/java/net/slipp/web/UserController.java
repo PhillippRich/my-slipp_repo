@@ -1,5 +1,9 @@
 package net.slipp.web;
 
+import static net.slipp.web.HttpSessionUtils.HTTP_SESSION_USER;
+import static net.slipp.web.HttpSessionUtils.isLoginUser;
+import static net.slipp.web.HttpSessionUtils.getUserFromSession;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,18 +37,18 @@ public class UserController {
 			return "redirect:/users/loginForm";
 		}
 
-		if (!user.getPassword().equals(password)) {
+		if (user.matchPassword(password)) {
 			return "redirect:/users/loginForm";
 		}
 
-		httpSession.setAttribute("user", user);
+		httpSession.setAttribute(HTTP_SESSION_USER, user);
 
 		return "redirect:/";
 	}
 
 	@GetMapping("/logout")
 	public String logOut(HttpSession httpSession) {
-		httpSession.removeAttribute("user");
+		httpSession.removeAttribute(HTTP_SESSION_USER);
 		return "redirect:/";
 	}
 
@@ -53,14 +57,30 @@ public class UserController {
 		return "/user/form";
 	}
 
-	@GetMapping("/{id}/updateForm")
-	public String updateform(@PathVariable Long id, Model model) {
+	@GetMapping("/{id}/form")
+	public String updateform(@PathVariable Long id, Model model, HttpSession httpSession) {
+		if (isLoginUser(httpSession)) {
+			return "redirect:/users/loginForm";
+		}
+		
+		if(!getUserFromSession(httpSession).matchId(id)) {
+			throw new IllegalStateException("자신의 정보만 스정 할 수 있습니다");
+		}
+		
 		model.addAttribute(userRepository.findOne(id));
 		return "/user/updateForm";
 	}
 
 	@PutMapping("/{id}")
-	public String updateUser(@PathVariable Long id, User newUserInfo) {
+	public String updateUser(@PathVariable Long id, User newUserInfo, HttpSession httpSession) {
+		if (isLoginUser(httpSession)) {
+			return "redirect:/users/loginForm";
+		}
+		
+		if(!getUserFromSession(httpSession).matchId(id)) {
+			throw new IllegalStateException("자신의 정보만 스정 할 수 있습니다");
+		}
+		
 		User user = userRepository.findOne(id);
 		user.updateUser(newUserInfo);
 		userRepository.save(user);
@@ -78,24 +98,4 @@ public class UserController {
 		model.addAttribute("users", userRepository.findAll());
 		return "/user/list";
 	}
-
-	// Old
-	// @GetMapping("/form")
-	// public String signUp() {
-	// return "form";
-	// }
-	//
-	// @PostMapping("/create")
-	// public String create(User user) {
-	// System.out.println("user id : " + user);
-	// userRepository.save(user);
-	// return "redirect:/list";
-	// }
-	//
-	// @GetMapping("/list")
-	// public String list(Model model) {
-	// model.addAttribute("users", userRepository.findAll());
-	// return "list";
-	// }
-
 }
